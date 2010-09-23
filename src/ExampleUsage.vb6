@@ -1,0 +1,15 @@
+Private Sub Command1_Click()
+    Dim graph As GOGraph.GOGraph
+    Set graph = New GOGraph.GOGraph
+    
+    graph.InitializeGraph ("C:\Documents and Settings\cg\Desktop\GeneOntologyPath\gene_ontology_ext.obo") 'Replace with the path to your GO v1.2 flat file here
+    
+    Dim path() As Long
+    path = graph.ShortestPath(1, 51094) 'Input two GO IDs as Longs, will return an array of Longs representing each GO ID in the shortest path
+    Dim pathLength As Integer
+    pathLength = UBound(path) - LBound(path)
+    
+    For i = 0 To pathLength
+        MsgBox (path(i))
+    Next i
+End Sub
