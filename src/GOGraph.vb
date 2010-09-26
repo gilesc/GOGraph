@@ -21,12 +21,11 @@ Public Class GOGraph
     Public Sub New()
         MyBase.New()
     End Sub
-    Dim graph As UndirectedGraph(Of Int32, UndirectedEdge(Of Int32))
+    Dim graphs As New Dictionary(Of String, UndirectedGraph(Of Int32, UndirectedEdge(Of Int32)))
 
     Public Sub InitializeGraph(ByVal goPath As String)
-        graph = New UndirectedGraph(Of Int32, UndirectedEdge(Of Int32))
-
-        Dim line As String
+        Dim graph As UndirectedGraph(Of Int32, UndirectedEdge(Of Int32))
+        Dim line, goNamespace As String
         Dim currentTerm, parentTerm As Int32
 
         Using reader As StreamReader = New StreamReader(goPath)
@@ -36,8 +35,15 @@ Public Class GOGraph
                     reader.ReadToEnd()
                 ElseIf line.StartsWith("id:") Then
                     currentTerm = Int32.Parse(line.Substring(7, 7))
-                    graph.AddVertex(currentTerm)
+                ElseIf line.StartsWith("namespace:") Then
+                    goNamespace = line.Substring(11)
                 ElseIf line.StartsWith("is_a:") Then
+                    If Not graphs.ContainsKey(goNamespace) Then
+                        graphs.Add(goNamespace, New UndirectedGraph(Of Int32, UndirectedEdge(Of Int32)))
+                    End If
+                    graph = graphs.Item(goNamespace)
+
+                    graph.AddVertex(currentTerm)
                     parentTerm = Int32.Parse(line.Substring(10, 7))
                     graph.AddVertex(parentTerm)
                     graph.AddEdge(New UndirectedEdge(Of Int32)(currentTerm, parentTerm))
@@ -52,6 +58,18 @@ Public Class GOGraph
     Public Function ShortestPath(ByVal startNode As Int32, ByVal endNode As Int32) As Int32()
         Dim path As IEnumerable(Of UndirectedEdge(Of Int32))
 
+        'Choose appropriate graph (or return nothing if terms aren't in same namespace)
+        Dim graph As UndirectedGraph(Of Int32, UndirectedEdge(Of Int32))
+        For Each g In graphs.Values
+            If g.ContainsVertex(startNode) And g.ContainsVertex(endNode) Then
+                graph = g
+            End If
+        Next
+        If graph Is Nothing Then
+            Return New Int32() {}
+        End If
+
+        'Find shortest path
         Dim nodes As New List(Of Int32)
         If (graph.ShortestPathsDijkstra(costFn, startNode)(endNode, path)) Then
             nodes.Add(startNode)
@@ -65,7 +83,22 @@ Public Class GOGraph
         End If
         Return nodes.ToArray()
     End Function
-
 End Class
 
+Module Test
+    Dim graph As New GOGraph()
 
+    Sub PrintPath(ByVal startNode As Int32, ByVal endNode As Int32)
+        For Each node In graph.ShortestPath(startNode, endNode)
+            Console.WriteLine(node)
+        Next
+        Console.WriteLine("-----")
+    End Sub
+
+    Sub main()
+        MsgBox(Guid.NewGuid().ToString)
+        graph.InitializeGraph("C:/data/gene_ontology_ext.obo")
+        PrintPath(8285, 8150)
+        PrintPath(19568, 8150)
+    End Sub
+End Module
