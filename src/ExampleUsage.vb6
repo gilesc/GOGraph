@@ -2,8 +2,9 @@ Private Sub Command1_Click()
     Dim graph As GOGraph.GOGraph
     Set graph = New GOGraph.GOGraph
     
-    graph.InitializeGraph ("C:\Documents and Settings\cg\Desktop\GeneOntologyPath\gene_ontology_ext.obo") 'Replace with the path to your GO v1.2 flat file here
+    graph.InitializeGraph ("C:\data\gene_ontology_ext.obo") 'Replace with the path to your GO v1.2 flat file here
     
+    'Test ShortestPath
     Dim path() As Long
     path = graph.ShortestPath(1, 51094) 'Input two GO IDs as Longs, will return an array of Longs representing each GO ID in the shortest path
     Dim pathLength As Integer
@@ -12,4 +13,18 @@ Private Sub Command1_Click()
     For i = 0 To pathLength
         MsgBox (path(i))
     Next i
+    
+    MsgBox ("finding ancestors")
+    'Test FindAllAncestors
+    Dim ancestors() As Long
+    ancestors = graph.FindallAncestors(8285)
+    For Each i In ancestors
+        MsgBox (i)
+    Next
+    
+    'Test IsAncestor
+    MsgBox (graph.IsAncestor(8150, 8285))
+    MsgBox (graph.IsAncestor(8151, 8285))
+    
+    
 End Sub
